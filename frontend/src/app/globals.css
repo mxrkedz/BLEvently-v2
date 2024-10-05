@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-background: #0e1116;
+
+    --color-text-base: #f1f3f9;
+    --color-text-muted: rgba(205, 213, 229, 0.432);
+    --color-text-inverted: #fd9e02;
+
+    --color-fill: #fd9e02;
+
+    --color-button-base: #fd9e02;
+    --color-button-base-hover: #fb8500;
+    --color-button-accent: #ffff;
+    --color-button-accent-hover: #fef2f2;
+    --color-button-muted: rgba(205, 213, 229, 0.432);
+  }
+}
+
+:root {
+  --background: #0e1116;
+  --foreground: #f1f3f9;
+}
+
+* {
+  border-color: inherit;
+  /* border-width: 1px; */
+  /* border-style: solid; */
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "Manrope", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Manrope", sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+
