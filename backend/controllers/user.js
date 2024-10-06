@@ -59,7 +59,6 @@ export const login = asyncError(async (req, res, next) => {
   const token = user.generateToken();
 
   sendToken(user, res, `Welcome back, ${user.name}`, 200);
-  
 });
 
 export const profile = asyncError(async (req, res, next) => {

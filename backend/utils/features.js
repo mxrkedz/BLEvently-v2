@@ -20,7 +20,13 @@ export const sendToken = (user, res, message, statusCode) => {
     .json({
       success: true,
       message: message,
-      // token
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        image: user.avatar.url,
+      },
+      token,
     });
 };
 
@@ -44,6 +50,6 @@ export const sendEmail = async (subject, to, text, html) => {
     to,
     subject,
     text,
-    html, // Include HTML content here
+    html,
   });
 };

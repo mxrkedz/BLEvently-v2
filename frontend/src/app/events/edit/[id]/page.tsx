@@ -1,17 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import { BiCalendar, BiUpload } from "react-icons/bi";
-import {
-  Calendar,
-  Input,
-  Button,
-  Textarea,
-  RadioGroup,
-  Radio,
-  TimeInput,
-} from "@nextui-org/react";
-import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/popover";
-import { format } from "date-fns";
+import { BiUpload } from "react-icons/bi";
+import { Input, Button, Textarea, DatePicker } from "@nextui-org/react";
+import NavBar from "@/app/components/navbar";
+import { now, getLocalTimeZone } from "@internationalized/date";
+import { FaPeopleGroup } from "react-icons/fa6";
+
 const EditPage = () => {
   const [eventData, setEventData] = useState({
     image: null,
@@ -28,270 +22,253 @@ const EditPage = () => {
     maxCapacity: "",
   });
   return (
-    <div className="mt-10 flex items-center justify-center">
-      <form className="max-w-3xl bg-gray-800/50  p-6 rounded-3xl">
-        <div>
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-4">
-              {eventData.image && (
-                <img
-                  src={URL.createObjectURL(eventData.image)}
-                  alt="Event preview"
-                  className="w-24 h-24 object-cover rounded"
+    <>
+      <NavBar />
+      <div className="my-10 flex items-center justify-center">
+        <form className="max-w-3xl bg-gray-800/50 p-6 rounded-3xl">
+          <div>
+            <div className="flex items-center justify-center">
+              <div className="flex items-center space-x-4">
+                {eventData.image && (
+                  <img
+                    src={URL.createObjectURL(eventData.image)}
+                    alt="Event preview"
+                    className="w-24 h-24 object-cover rounded"
+                  />
+                )}
+                <label
+                  htmlFor="image-upload"
+                  className="cursor-pointer bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded flex items-center mt-2"
+                >
+                  <BiUpload className="mr-2 h-4 w-4" />
+                  Upload Image
+                </label>
+                <Input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
                 />
-              )}
-              <label
-                htmlFor="image-upload"
-                className="cursor-pointer bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded flex items-center mt-2"
-              >
-                <BiUpload className="mr-2 h-4 w-4" />
-                Upload Image
-              </label>
-              <Input
-                id="image-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-              />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-5">
-          <label className="font-bold mt-5" htmlFor="location">
-            Event Title
-          </label>
-          <Input
-            id="title"
-            name="title"
-            value={eventData.title}
-            placeholder="Enter event title"
-            required
-            className="border border-white mt-5"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2 mt-5">
-            <label className="font-bold mt-5">Start Date and Time</label>
-
-            <div className="flex space-x-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    color="default"
-                    className={`w-full justify-start text-left font-normal ${
-                      !eventData.startDate && "text-muted-foreground"
-                    }`}
-                  >
-                    <BiCalendar className="mr-2 h-4 w-4" />
-                    {eventData.startDate ? (
-                      format(eventData.startDate, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    aria-label="Date (Show Month and Year Picker)"
-                    showMonthAndYearPickers
-                  />
-                </PopoverContent>
-              </Popover>
-              <Input
-                type="time"
-                name="startTime"
-                className="w-full border border-white"
-              />
-            </div>
-          </div>
-          <div className="space-y-2 mt-5">
-            <label className="font-bold mt-5">End Date and Time</label>
-            <div className="flex space-x-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    color="default"
-                    className={`w-full justify-start text-left font-normal ${
-                      !eventData.startDate && "text-muted-foreground"
-                    }`}
-                  >
-                    <BiCalendar className="mr-2 h-4 w-4" />
-                    {eventData.startDate ? (
-                      format(eventData.startDate, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    aria-label="Date (Show Month and Year Picker)"
-                    showMonthAndYearPickers
-                  />
-                </PopoverContent>
-              </Popover>
-              <TimeInput isRequired />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-5">
-          <label className="font-bold mt-5" htmlFor="location">
-            Location
-          </label>
-          <Input
-            id="location"
-            name="location"
-            value={eventData.location}
-            placeholder="Enter event location"
-            className="border border-white"
-          />
-        </div>
-
-        <div className="mt-5">
-          <label className="font-bold mt-5" htmlFor="description">
-            Description
-          </label>
-          <Textarea
-            id="description"
-            name="description"
-            value={eventData.description}
-            placeholder="Enter event description"
-            rows={4}
-            className="border border-white"
-          />
-        </div>
-
-        <div className="space-y-2 mt-5">
-          <label className="font-bold mt-5">Ticket Type</label>
-          <RadioGroup
-            name="ticketType"
-            value={eventData.ticketType}
-            onValueChange={(value) =>
-              setEventData((prev) => ({ ...prev, ticketType: value }))
-            }
-            className="flex space-x-4"
-            style={{ alignItems: "start" }}
-          >
-            <div className="flex items-start space-x-2">
-              <Radio
-                value="free"
-                id="free"
-                className="mt-1"
-                style={{ alignSelf: "flex-start" }}
-              />
-              <label
-                htmlFor="free"
-                className="font-bold mt-1"
-                style={{ alignSelf: "flex-start" }}
-              >
-                Free
-              </label>
-            </div>
-            <div className="flex items-start space-x-2">
-              <Radio
-                value="paid"
-                id="paid"
-                className="mt-1"
-                style={{ alignSelf: "flex-start" }}
-              />
-              <label
-                htmlFor="paid"
-                className="font-bold mt-1"
-                style={{ alignSelf: "flex-start" }}
-              >
-                Paid
-              </label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        {eventData.ticketType === "paid" && (
           <div className="mt-5">
-            <label className="font-bold mt-5" htmlFor="ticketPrice">
-              Ticket Price
-            </label>
             <Input
-              id="ticketPrice"
-              name="ticketPrice"
-              type="number"
-              placeholder="Enter ticket price"
-              className="border border-white"
+              label="Event Title"
+              id="title"
+              type="text"
+              placeholder="Enter Event Title"
+              isClearable
+              isRequired
+              radius="lg"
+              labelPlacement="outside"
+              variant="bordered"
             />
           </div>
-        )}
 
-        <div className="mt-5">
-          <label className="font-bold mt-5">Event Capacity</label>
-          <RadioGroup
-            name="capacityType"
-            value={eventData.capacityType}
-            onValueChange={(value) =>
-              setEventData((prev) => ({ ...prev, capacityType: value }))
-            }
-            className="flex space-x-4"
-            style={{ alignItems: "start" }}
-          >
-            <div className="flex items-start space-x-2">
-              <Radio
-                value="unlimited"
-                id="unlimited"
-                className="mt-1"
-                style={{ alignSelf: "flex-start" }}
-              />
-              <label
-                htmlFor="unlimited"
-                className="font-bold mt-1"
-                style={{ alignSelf: "flex-start" }}
-              >
-                Unlimited
-              </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 mt-5">
+              <div className="flex space-x-2 rounded-lg">
+                <DatePicker
+                  label="Start Date and Time"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  hideTimeZone
+                  showMonthAndYearPickers
+                  isRequired
+                  errorMessage="Please enter a valid date."
+                  defaultValue={now(getLocalTimeZone())}
+                  minValue={now(getLocalTimeZone())}
+                />
+              </div>
             </div>
-            <div className="flex items-start space-x-2">
-              <Radio
-                value="limited"
-                id="limited"
-                className="mt-1"
-                style={{ alignSelf: "flex-start" }}
-              />
-              <label
-                htmlFor="limited"
-                className="font-bold mt-1"
-                style={{ alignSelf: "flex-start" }}
-              >
-                Limited
-              </label>
+            <div className="space-y-2 mt-5">
+              <div className="flex space-x-2 rounded-lg">
+                <DatePicker
+                  label="End Date and Time"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  hideTimeZone
+                  showMonthAndYearPickers
+                  isRequired
+                  errorMessage="Please enter a valid date."
+                  defaultValue={now(getLocalTimeZone())}
+                  minValue={now(getLocalTimeZone())}
+                />
+              </div>
             </div>
-          </RadioGroup>
-        </div>
+          </div>
 
-        {eventData.capacityType === "limited" && (
-          <div className="mt-5">
-            <label className="font-bold mt-5" htmlFor="maxCapacity">
-              Maximum Capacity
-            </label>
+          <div className="mt-8">
             <Input
-              id="maxCapacity"
-              name="maxCapacity"
-              type="number"
-              placeholder="Enter maximum capacity"
-              className="border border-white"
+              label="Location"
+              id="location"
+              name="location"
+              type="text"
+              placeholder="Enter Event Location"
+              isClearable
+              isRequired
+              radius="lg"
+              labelPlacement="outside"
+              variant="bordered"
             />
           </div>
-        )}
 
-        <div className="flex justify-center mt-10">
-          <Button
-            type="submit"
-            className="w-1/2 bg-primary hover:bg-primary-hover text-white font-bold rounded-lg border border-primary px-4 py-2"
-          >
-            Update Event
-          </Button>
-        </div>
-      </form>
-    </div>
+          <div className="mt-5">
+            <Textarea
+              label="Description"
+              id="description"
+              name="description"
+              isRequired
+              labelPlacement="outside"
+              placeholder="Describe your event..."
+              variant="bordered"
+              rows={4}
+            />
+          </div>
+
+          <div className="space-y-2 mt-5">
+            <label className="font-bold mt-5">Ticket Type</label>
+            <div className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="ticketType"
+                  value="free"
+                  id="free"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                  defaultChecked
+                  checked={eventData.ticketType === "free"}
+                  onChange={(e) =>
+                    setEventData((prev) => ({
+                      ...prev,
+                      ticketType: e.target.value,
+                    }))
+                  }
+                />
+                <label htmlFor="free" className="font-bold mt-1">
+                  Free
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="ticketType"
+                  value="paid"
+                  id="paid"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                  checked={eventData.ticketType === "paid"}
+                  onChange={(e) =>
+                    setEventData((prev) => ({
+                      ...prev,
+                      ticketType: e.target.value,
+                    }))
+                  }
+                />
+                <label htmlFor="paid" className="font-bold mt-1">
+                  Paid
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {eventData.ticketType === "paid" && (
+            <div className="mt-10">
+              <Input
+                id="ticketPrice"
+                name="ticketPrice"
+                type="number"
+                label="Ticket Price"
+                isRequired
+                placeholder="0.00"
+                labelPlacement="outside"
+                startContent={
+                  <div className="pointer-events-none flex items-center">
+                    <span className="text-default-400 text-small">$SOL</span>
+                  </div>
+                }
+              />
+            </div>
+          )}
+
+          <div className="space-y-2 mt-5">
+            <label className="font-bold mt-5">Event Capacity</label>
+            <div className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="capacityType"
+                  value="unlimited"
+                  id="unlimited"
+                  defaultChecked
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                  checked={eventData.capacityType === "unlimited"}
+                  onChange={(e) =>
+                    setEventData((prev) => ({
+                      ...prev,
+                      capacityType: e.target.value,
+                    }))
+                  }
+                />
+                <label htmlFor="unlimited" className="font-bold mt-1">
+                  Unlimited
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="capacityType"
+                  value="limited"
+                  id="limited"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                  checked={eventData.capacityType === "limited"}
+                  onChange={(e) =>
+                    setEventData((prev) => ({
+                      ...prev,
+                      capacityType: e.target.value,
+                    }))
+                  }
+                />
+                <label htmlFor="limited" className="font-bold mt-1">
+                  Limited
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {eventData.capacityType === "limited" && (
+            <div className="mt-10">
+              <Input
+                id="maxCapacity"
+                name="maxCapacity"
+                type="number"
+                label="Maximum Capacity"
+                isRequired
+                placeholder="0"
+                labelPlacement="outside"
+                startContent={
+                  <div className="pointer-events-none flex items-center">
+                    <span className="text-default-400 text-small">
+                      <FaPeopleGroup />
+                    </span>
+                  </div>
+                }
+              />
+            </div>
+          )}
+
+          <div className="flex justify-center mt-10">
+            <Button
+              type="submit"
+              className="w-1/2 bg-primary bg-skin-button-base hover:bg-skin-button-base-hover transition ease-in duration-200 text-white font-bold rounded-lg px-4 py-2"
+            >
+              Update Event
+            </Button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 };
 

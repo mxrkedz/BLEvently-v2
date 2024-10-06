@@ -19,7 +19,6 @@ import { getCompletedAction } from "@/app/helper";
 const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
 export const GET = async (req: NextRequest) => {
-
   const payload: ActionGetResponse = {
     type: "action",
     title: "Event Name",
@@ -87,6 +86,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       await createPostResponse({
         fields: {
+          type: "transaction",
           links: {
             next: getCompletedAction(),
           },
