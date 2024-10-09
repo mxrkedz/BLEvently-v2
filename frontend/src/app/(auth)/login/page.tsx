@@ -1,5 +1,5 @@
-import Footer from "../components/footer";
-import NavBar from "../components/navbar";
+import Footer from "../../components/footer";
+import NavBar from "../../components/navbar";
 import LoginForm from "./components/loginForm";
 
 export default function Login() {

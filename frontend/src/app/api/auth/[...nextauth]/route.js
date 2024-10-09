@@ -11,11 +11,11 @@ const authOptions = {
       },
       async authorize(credentials) {
         const response = await fetch(
-          "http://localhost:5000/api/v1/user/login",
+          `${process.env.SERVER_URL}/api/v1/user/login`,
           {
             method: "POST",
-            body: JSON.stringify(credentials),
             headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(credentials),
           }
         );
 

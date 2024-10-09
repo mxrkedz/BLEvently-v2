@@ -57,7 +57,7 @@ const LoginForm = () => {
             id="email"
             placeholder="you@email.com"
             variant="underlined"
-            isClearable
+            onChange={(e) => setEmail(e.target.value)}
             startContent={
               <CiMail className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
             }
@@ -71,6 +71,7 @@ const LoginForm = () => {
             id="password"
             placeholder="Enter Password"
             variant="underlined"
+            onChange={(e) => setPassword(e.target.value)}
             endContent={
               <button
                 className="focus:outline-none"

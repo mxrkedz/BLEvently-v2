@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./providers";
+import NavBar from "./components/navbar";
 const manrope = Manrope({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -16,7 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={manrope.className}>        <AuthProvider>{children}</AuthProvider>
+      <body className={manrope.className}>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

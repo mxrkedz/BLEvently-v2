@@ -34,6 +34,14 @@ const config: Config = {
   },
   plugins: [
     nextuiConfig({
+      themes: {
+        dark: {
+          colors: {
+            background: "#0e1116",
+            foreground: "#f1f3f9",
+          },
+        },
+      },
       layout: {
         disabledOpacity: "0.3", // opacity-[0.3]
         radius: {
