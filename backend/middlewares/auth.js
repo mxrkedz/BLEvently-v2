@@ -4,16 +4,17 @@ import jwt from "jsonwebtoken";
 import { asyncError } from "./error.js";
 
 export const isAuthenticated = asyncError(async (req, res, next) => {
-  // const { token } = req.cookies;
-
-  // if (!token) return next(new ErrorHandler("Not Logged In", 401));
-
+  const tokenFromCookie = req.cookies.token;
   const authorization = req.headers["authorization"];
 
-  if (!authorization || !authorization.startsWith("Bearer "))
-    return next(new ErrorHandler("Not Logged In", 401));
+  let token;
+  if (tokenFromCookie) {
+    token = tokenFromCookie;
+  } else if (authorization && authorization.startsWith("Bearer ")) {
+    token = authorization.split(" ")[1];
+  }
 
-  const token = authorization.split(" ")[1];
+  if (!token) return next(new ErrorHandler("Not Logged In", 401));
 
   const decodeData = jwt.verify(token, process.env.JWT_SECRET);
 

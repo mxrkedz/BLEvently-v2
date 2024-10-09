@@ -165,7 +165,6 @@ export default function Component() {
                       <DropdownMenu variant="faded">
                         <DropdownItem
                           href={`/events/edit/${event._id}`}
-                          description="Edit your event"
                           showDivider
                           startContent={
                             <PiPencil

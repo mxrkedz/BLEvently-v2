@@ -1,54 +1,122 @@
 "use client";
-import React, { useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 import { BiUpload } from "react-icons/bi";
 import { Input, Button, Textarea, DatePicker } from "@nextui-org/react";
 import NavBar from "@/app/components/navbar";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { FaPeopleGroup } from "react-icons/fa6";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-const EditPage = () => {
-  const [eventData, setEventData] = useState({
-    image: null,
-    title: "",
-    startDate: null,
-    startTime: "",
-    endDate: null,
-    endTime: "",
-    location: "",
-    description: "",
-    ticketType: "free",
-    ticketPrice: "",
-    capacityType: "unlimited",
-    maxCapacity: "",
-  });
+const CreatePage = () => {
+  const [name, setName] = useState<string>("");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [location, setLocation] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [price, setPrice] = useState<number | undefined>(0);
+  const [ticketType, setTicketType] = useState("Free");
+  const [capacity, setCapacity] = useState("Unlimited");
+  const [maxCapacity, setMaxCapacity] = useState<number | undefined>(0);
+
+  const { data: session } = useSession();
+  const [imagesPreview, setImagesPreview] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
+
+  const router = useRouter();
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files?.length ? e.target.files : []);
+    setImagesPreview([]); // Reset previews
+    setImages([]); // Reset image files
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.readyState === 2) {
+          setImagesPreview((prev) => [...prev, reader.result as string]);
+          setImages((prev) => [...prev, file]);
+        }
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("startDate", startDate);
+    formData.append("endDate", endDate);
+    formData.append("location", location);
+    formData.append("description", description);
+    formData.append("ticketType", ticketType);
+    formData.append("price", price?.toString() || "");
+    formData.append("capacity", capacity);
+    formData.append("maxCapacity", maxCapacity?.toString() || "");
+
+    images.forEach((image) => {
+      formData.append("file", image);
+    });
+
+    try {
+      const response = await fetch("http://localhost:5000/api/v1/event/new", {
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        router.replace("/events");
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to create event:", errorData);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
+
   return (
     <>
       <NavBar />
       <div className="my-10 flex items-center justify-center">
-        <form className="max-w-3xl bg-gray-800/50 p-6 rounded-3xl">
-          <div>
-            <div className="flex items-center justify-center">
-              <div className="flex items-center space-x-4">
-                {eventData.image && (
-                  <img
-                    src={URL.createObjectURL(eventData.image)}
-                    alt="Event preview"
-                    className="w-24 h-24 object-cover rounded"
+        <form
+          className="max-w-3xl w-2xl md:w-9/12 bg-gray-800/50 p-6 rounded-3xl"
+          onSubmit={handleSubmit}
+        >
+          <div className="max-w-md mx-auto rounded-lg overflow-hidden md:max-w-xl">
+            <div className="md:flex">
+              <div className="w-full p-3">
+                <div className="relative h-48 rounded-lg border-dashed border-2 border-[#fd9e02] bg-gray-900/50 flex justify-center items-center shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+                  {imagesPreview.length > 0 ? (
+                    <img
+                      src={imagesPreview[0]}
+                      alt="Event preview"
+                      className="absolute h-full w-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="absolute flex flex-col items-center">
+                      <BiUpload size={60} className="mb-3" />
+                      <span className="block text-gray-500 font-semibold">
+                        Drag &amp; drop your files here
+                      </span>
+                      <span className="block text-gray-400 font-normal mt-1">
+                        or click to upload
+                      </span>
+                    </div>
+                  )}
+                  <input
+                    name="image"
+                    className="absolute h-full w-full opacity-0 cursor-pointer"
+                    type="file"
+                    onChange={handleImageChange}
                   />
-                )}
-                <label
-                  htmlFor="image-upload"
-                  className="cursor-pointer bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded flex items-center mt-2"
-                >
-                  <BiUpload className="mr-2 h-4 w-4" />
-                  Upload Image
-                </label>
-                <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                />
+                </div>
               </div>
             </div>
           </div>
@@ -57,6 +125,7 @@ const EditPage = () => {
             <Input
               label="Event Title"
               id="title"
+              name="title"
               type="text"
               placeholder="Enter Event Title"
               isClearable
@@ -64,39 +133,36 @@ const EditPage = () => {
               radius="lg"
               labelPlacement="outside"
               variant="bordered"
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 mt-5">
-              <div className="flex space-x-2 rounded-lg">
-                <DatePicker
-                  label="Start Date and Time"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  hideTimeZone
-                  showMonthAndYearPickers
-                  isRequired
-                  errorMessage="Please enter a valid date."
-                  defaultValue={now(getLocalTimeZone())}
-                  minValue={now(getLocalTimeZone())}
-                />
-              </div>
+              <DatePicker
+                label="Start Date and Time"
+                labelPlacement="outside"
+                variant="bordered"
+                hideTimeZone
+                showMonthAndYearPickers
+                isRequired
+                errorMessage="Please enter a valid date."
+                minValue={now(getLocalTimeZone())}
+                onChange={(value) => setStartDate(value.toString())} // Update start date
+              />
             </div>
             <div className="space-y-2 mt-5">
-              <div className="flex space-x-2 rounded-lg">
-                <DatePicker
-                  label="End Date and Time"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  hideTimeZone
-                  showMonthAndYearPickers
-                  isRequired
-                  errorMessage="Please enter a valid date."
-                  defaultValue={now(getLocalTimeZone())}
-                  minValue={now(getLocalTimeZone())}
-                />
-              </div>
+              <DatePicker
+                label="End Date and Time"
+                labelPlacement="outside"
+                variant="bordered"
+                hideTimeZone
+                showMonthAndYearPickers
+                isRequired
+                errorMessage="Please enter a valid date."
+                minValue={now(getLocalTimeZone())}
+                onChange={(value) => setEndDate(value.toString())} // Update end date
+              />
             </div>
           </div>
 
@@ -112,6 +178,7 @@ const EditPage = () => {
               radius="lg"
               labelPlacement="outside"
               variant="bordered"
+              onChange={(e) => setLocation(e.target.value)}
             />
           </div>
 
@@ -125,6 +192,7 @@ const EditPage = () => {
               placeholder="Describe your event..."
               variant="bordered"
               rows={4}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
@@ -135,19 +203,13 @@ const EditPage = () => {
                 <input
                   type="radio"
                   name="ticketType"
-                  value="free"
-                  id="free"
+                  value="Free"
+                  id="Free"
+                  checked={ticketType === "Free"}
+                  onChange={(e) => setTicketType(e.target.value)} // Update ticket type
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded"
-                  defaultChecked
-                  checked={eventData.ticketType === "free"}
-                  onChange={(e) =>
-                    setEventData((prev) => ({
-                      ...prev,
-                      ticketType: e.target.value,
-                    }))
-                  }
                 />
-                <label htmlFor="free" className="font-bold mt-1">
+                <label htmlFor="Free" className="font-bold mt-1">
                   Free
                 </label>
               </div>
@@ -155,25 +217,20 @@ const EditPage = () => {
                 <input
                   type="radio"
                   name="ticketType"
-                  value="paid"
-                  id="paid"
+                  value="Paid"
+                  id="Paid"
+                  checked={ticketType === "Paid"}
+                  onChange={(e) => setTicketType(e.target.value)} // Update ticket type
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded"
-                  checked={eventData.ticketType === "paid"}
-                  onChange={(e) =>
-                    setEventData((prev) => ({
-                      ...prev,
-                      ticketType: e.target.value,
-                    }))
-                  }
                 />
-                <label htmlFor="paid" className="font-bold mt-1">
+                <label htmlFor="Paid" className="font-bold mt-1">
                   Paid
                 </label>
               </div>
             </div>
           </div>
 
-          {eventData.ticketType === "paid" && (
+          {ticketType === "Paid" && (
             <div className="mt-10">
               <Input
                 id="ticketPrice"
@@ -181,8 +238,10 @@ const EditPage = () => {
                 type="number"
                 label="Ticket Price"
                 isRequired
+                variant="bordered"
                 placeholder="0.00"
                 labelPlacement="outside"
+                onChange={(e) => setPrice(Number(e.target.value))} // Update price
                 startContent={
                   <div className="pointer-events-none flex items-center">
                     <span className="text-default-400 text-small">$SOL</span>
@@ -199,19 +258,15 @@ const EditPage = () => {
                 <input
                   type="radio"
                   name="capacityType"
-                  value="unlimited"
-                  id="unlimited"
-                  defaultChecked
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
-                  checked={eventData.capacityType === "unlimited"}
-                  onChange={(e) =>
-                    setEventData((prev) => ({
-                      ...prev,
-                      capacityType: e.target.value,
-                    }))
-                  }
+                  value="Unlimited"
+                  id="Unlimited"
+                  checked={capacity === "Unlimited"}
+                  onChange={(e) => {
+                    setCapacity(e.target.value);
+                  }}
+                  className="w-4 h-4 "
                 />
-                <label htmlFor="unlimited" className="font-bold mt-1">
+                <label htmlFor="Unlimited" className="font-bold mt-1">
                   Unlimited
                 </label>
               </div>
@@ -219,34 +274,33 @@ const EditPage = () => {
                 <input
                   type="radio"
                   name="capacityType"
-                  value="limited"
-                  id="limited"
+                  value="Limited"
+                  id="Limited"
+                  checked={capacity === "Limited"}
+                  onChange={(e) => {
+                    setCapacity(e.target.value);
+                  }}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded"
-                  checked={eventData.capacityType === "limited"}
-                  onChange={(e) =>
-                    setEventData((prev) => ({
-                      ...prev,
-                      capacityType: e.target.value,
-                    }))
-                  }
                 />
-                <label htmlFor="limited" className="font-bold mt-1">
+                <label htmlFor="Limited" className="font-bold mt-1">
                   Limited
                 </label>
               </div>
             </div>
           </div>
 
-          {eventData.capacityType === "limited" && (
+          {capacity === "Limited" && (
             <div className="mt-10">
               <Input
                 id="maxCapacity"
                 name="maxCapacity"
                 type="number"
                 label="Maximum Capacity"
+                variant="bordered"
                 isRequired
                 placeholder="0"
                 labelPlacement="outside"
+                onChange={(e) => setMaxCapacity(Number(e.target.value))} // Update max capacity
                 startContent={
                   <div className="pointer-events-none flex items-center">
                     <span className="text-default-400 text-small">
@@ -263,7 +317,7 @@ const EditPage = () => {
               type="submit"
               className="w-1/2 bg-primary bg-skin-button-base hover:bg-skin-button-base-hover transition ease-in duration-200 text-white font-bold rounded-lg px-4 py-2"
             >
-              Update Event
+              Create Event
             </Button>
           </div>
         </form>
@@ -272,4 +326,4 @@ const EditPage = () => {
   );
 };
 
-export default EditPage;
+export default CreatePage;

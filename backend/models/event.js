@@ -30,7 +30,13 @@ const schema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: true,
+    validate: {
+      validator: function (value) {
+        // price should be 0 or undefined if ticket type is free
+        return this.ticketType === "Free" ? value === 0 || value === undefined : value > 0;
+      },
+      message: "Price must be 0 if ticket type is free.",
+    },
   },
   ticketType: {
     type: String,
@@ -44,15 +50,18 @@ const schema = new mongoose.Schema({
   },
   maxCapacity: {
     type: Number,
+    required: function () {
+      return this.capacity === "Limited";
+    },
     validate: {
       validator: function (value) {
-        // maxCapacity should only be defined when capacity is 'limited'
-        return this.capacity === "Limited" ? value > 0 : value === undefined;
+        return this.capacity === "Unlimited" ? value === 0 : value > 0;
       },
-      message:
-        "Max capacity must be more than 0 if the capacity is set to limited.",
+      message: "Max capacity must be 0 if the capacity is set to unlimited, or more than 0 if the capacity is set to limited.",
     },
   },
+
+
   images: [
     {
       public_id: {
@@ -64,7 +73,7 @@ const schema = new mongoose.Schema({
         required: true,
       },
     },
-  ],
+  ]
 });
 
 export const Event = mongoose.model("Event", schema);
