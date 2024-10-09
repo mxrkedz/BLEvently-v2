@@ -25,20 +25,16 @@ const authOptions = {
           throw new Error(data.message);
         }
 
-        // Return user data including the token
         return { ...data.user, token: data.token };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.user = user; // Add user data to the token
-      }
-      return token;
+      return { ...token, ...user };
     },
     async session({ session, token }) {
-      session.user = token.user; // Make user data available in session
+      session.user = token;
       return session;
     },
   },

@@ -58,7 +58,7 @@ export const getAllEvents = asyncError(async (req, res, next) => {
 });
 
 export const getEventDetails = asyncError(async (req, res, next) => {
-  const event = await Event.findById(req.params.id).populate("category");
+  const event = await Event.findById(req.params.id);
 
   if (!event) return next(new ErrorHandler("Event not found", 404));
 
@@ -69,7 +69,13 @@ export const getEventDetails = asyncError(async (req, res, next) => {
 });
 
 export const getMyEvents = asyncError(async (req, res, next) => {
-  const events = await Event.find({ organizer: req.user._id });
+  const events = await Event.find({ organizer: req.user._id }).populate(
+    "organizer",
+    "name"
+  );
+
+  if (!events || events.length === 0)
+    return next(new ErrorHandler("Event not found", 404));
 
   res.status(200).json({
     success: true,

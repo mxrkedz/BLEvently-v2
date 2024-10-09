@@ -7,22 +7,52 @@ import {
   Image,
   CardFooter,
   Link,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  cn,
+  DropdownSection,
 } from "@nextui-org/react";
 import { BiCalendarMinus, BiTrash } from "react-icons/bi";
 import { PiPencil } from "react-icons/pi";
 import Loader from "../components/loader";
 import NavBar from "../components/navbar";
 import Footer from "../components/footer";
+import { useSession } from "next-auth/react";
+import { BsThreeDotsVertical } from "react-icons/bs";
 
 export default function Component() {
+  const { data: session } = useSession();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const [token, setToken] = useState<string | undefined>(undefined);
+
+  const iconClasses =
+    "text-xl text-default-500 pointer-events-none flex-shrink-0";
+
   useEffect(() => {
+    if (session?.user?.token) {
+      setToken(session.user.token);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
     const fetchEvents = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/v1/event/all");
+        const response = await fetch(
+          `http://localhost:5000/api/v1/event/myevents`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.user.token}`,
+            },
+          }
+        );
         const data = (await response.json()) as {
           success: boolean;
           events: Event[];
@@ -42,8 +72,18 @@ export default function Component() {
       }
     };
 
-    fetchEvents();
-  }, []);
+    if (session?.user?.token) {
+      fetchEvents();
+    } else {
+      timeoutId = setTimeout(() => {
+        fetchEvents();
+      }, 1000);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [token, session]);
 
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm(
@@ -74,36 +114,6 @@ export default function Component() {
     }
   };
 
-  if (loading) {
-    return (
-      <>
-        <NavBar />
-        <Loader />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <NavBar />
-        <div className="container mx-auto px-4 py-8 flex flex-col h-screen">
-          <div className="flex items-center mb-4">
-            <BiCalendarMinus className="mr-2" size={25} />
-            <h1 className="text-3xl font-bold">Upcoming Events</h1>
-          </div>
-          <div className="my-4 border-t border-b border-default-600 dark:border-default-100" />
-          <section className="overflow-y-auto">
-            <div className="text-xl font-bold p-4 text-center">
-              No Events Available.
-            </div>
-          </section>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
   return (
     <>
       <NavBar />
@@ -115,79 +125,107 @@ export default function Component() {
 
         <div className="my-4 border-t border-b border-default-600 dark:border-default-100" />
 
-        <section className="mx-auto max-w-[1920px] px-4 py-12 text-skin-base">
-          <div className="mb-4 grid grid-cols-12 gap-4">
-            {events.map((event) => (
-              <Card
-                isFooterBlurred
-                key={event._id} // Use a unique identifier for the key
-                className="w-full h-[300px] col-span-4"
-              >
-                <CardHeader className="absolute z-10 top-1 flex justify-between items-center">
-                  <div className="flex flex-col items-start">
-                    <h4 className="text-white/90 font-bold text-xl">
-                      {event.name}
-                    </h4>
-                    <p className="text-xs text-white/60 uppercase font-bold">
-                      {event.description}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      as={Link}
-                      href={`/events/edit/${event._id}`} // Use the event ID for editing
-                      size="sm"
-                      color="primary"
-                      className="rounded-full bg-blue-500/20 backdrop-blur"
-                    >
-                      <PiPencil className="text-blue-500" /> Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      color="primary"
-                      className="rounded-full bg-red-500/20 backdrop-blur"
-                      onClick={() => handleDelete(event._id)} // Call delete function
-                    >
-                      <BiTrash className="text-red-500" /> Delete
-                    </Button>
-                  </div>
-                </CardHeader>
-                <Image
-                  removeWrapper
-                  alt="Event Image" // Update the alt text accordingly
-                  className="z-0 w-full h-full object-cover"
-                  src={
-                    event.images[0]?.url ||
-                    "https://nextui.org/images/card-example-1.jpeg"
-                  }
-                />
-                <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100">
-                  <div className="flex flex-grow gap-2 items-center">
-                    <div className="flex flex-col">
-                      <p className="text-tiny text-white/60">Organized by</p>
-                      <p className="font-bold text-tiny text-white/60">
-                        {event.organizer}{" "}
+        {loading ? (
+          <Loader />
+        ) : error || !events.length ? (
+          <section className="overflow-y-auto">
+            <div className="text-xl font-bold p-4 text-center">
+              {error ? "Error Fetching Events." : "No Events Available."}
+            </div>
+          </section>
+        ) : (
+          <section className="mx-auto max-w-[1920px] px-4 py-12 text-skin-base">
+            <div className="mb-4 grid grid-cols-12 gap-4">
+              {events.map((event) => (
+                <Card
+                  isFooterBlurred
+                  key={event._id}
+                  className="w-full h-[300px] col-span-4"
+                >
+                  <CardHeader className="absolute z-10 top-1 flex justify-between items-center">
+                    <div className="flex flex-col items-start">
+                      <h4 className="text-white/90 font-bold text-xl">
+                        {event.name}
+                      </h4>
+                      <p className="text-xs text-white/60 uppercase font-bold">
+                        {event.description}
                       </p>
                     </div>
-                  </div>
-                  <Button
-                    as={Link}
-                    href="/events/1"
-                    radius="full"
-                    size="sm"
-                    className="font-bold rounded-full bg-gray-500/20 backdrop-blur"
-                  >
-                    See Details
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </section>
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <Button
+                          size="sm"
+                          color="primary"
+                          radius="full"
+                          className="font-bold rounded-full bg-gray-500/20 backdrop-blur"
+                        >
+                          <BsThreeDotsVertical className="text-skin-base" />
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu variant="faded">
+                        <DropdownItem
+                          href={`/events/edit/${event._id}`}
+                          description="Edit your event"
+                          showDivider
+                          startContent={
+                            <PiPencil
+                              className={cn(iconClasses, "text-primary")}
+                            />
+                          }
+                        >
+                          Edit
+                        </DropdownItem>
 
-        {/* <Pagination total={2} initialPage={1} /> */}
+                        <DropdownItem
+                          onClick={() => handleDelete(event._id)}
+                          className="text-danger"
+                          color="danger"
+                          description="Permanently delete your event"
+                          startContent={
+                            <BiTrash
+                              className={cn(iconClasses, "text-danger")}
+                            />
+                          }
+                        >
+                          Delete
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
+                  </CardHeader>
+                  <Image
+                    removeWrapper
+                    alt="Event Image"
+                    className="z-0 w-full h-full object-cover"
+                    src={
+                      event.images[0]?.url ||
+                      "https://nextui.org/images/card-example-1.jpeg"
+                    }
+                  />
+                  <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100">
+                    <div className="flex flex-grow gap-2 items-center">
+                      <div className="flex flex-col">
+                        <p className="text-tiny text-white/60">Organized by</p>
+                        <p className="font-bold text-tiny text-skin-inverted uppercase">
+                          {event.organizer.name.toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      as={Link}
+                      href="/events/1"
+                      radius="full"
+                      size="sm"
+                      className="font-bold rounded-full bg-gray-500/20 backdrop-blur"
+                    >
+                      See Details
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
-      <Footer />
     </>
   );
 }
@@ -197,5 +235,7 @@ interface Event {
   name: string;
   description: string;
   images: { url: string }[];
-  organizer: string;
+  organizer: {
+    name: string;
+  };
 }

@@ -4,11 +4,16 @@ import jwt from "jsonwebtoken";
 import { asyncError } from "./error.js";
 
 export const isAuthenticated = asyncError(async (req, res, next) => {
-  //const token = req.cookies.token;
+  // const { token } = req.cookies;
 
-  const { token } = req.cookies;
+  // if (!token) return next(new ErrorHandler("Not Logged In", 401));
 
-  if (!token) return next(new ErrorHandler("Not Logged In", 401));
+  const authorization = req.headers["authorization"];
+
+  if (!authorization || !authorization.startsWith("Bearer "))
+    return next(new ErrorHandler("Not Logged In", 401));
+
+  const token = authorization.split(" ")[1];
 
   const decodeData = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -16,7 +21,6 @@ export const isAuthenticated = asyncError(async (req, res, next) => {
 
   next();
 });
-
 export const isAdmin = asyncError(async (req, res, next) => {
   if (req.user.role !== "admin")
     return next(new ErrorHandler("Only Admin allowed", 401));
