@@ -114,6 +114,7 @@ const CreatePage = () => {
                     name="image"
                     className="absolute h-full w-full opacity-0 cursor-pointer"
                     type="file"
+                    accept="image/*"
                     onChange={handleImageChange}
                   />
                 </div>

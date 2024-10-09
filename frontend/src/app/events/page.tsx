@@ -12,13 +12,17 @@ import {
   DropdownMenu,
   DropdownItem,
   cn,
-  DropdownSection,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@nextui-org/react";
 import { BiCalendarMinus, BiTrash } from "react-icons/bi";
 import { PiPencil } from "react-icons/pi";
 import Loader from "../components/loader";
 import NavBar from "../components/navbar";
-import Footer from "../components/footer";
 import { useSession } from "next-auth/react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 
@@ -27,8 +31,9 @@ export default function Component() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [token, setToken] = useState<string | undefined>(undefined);
+  const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null);
 
   const iconClasses =
     "text-xl text-default-500 pointer-events-none flex-shrink-0";
@@ -40,7 +45,6 @@ export default function Component() {
   }, [session]);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
     const fetchEvents = async () => {
       try {
         const response = await fetch(
@@ -53,10 +57,7 @@ export default function Component() {
             },
           }
         );
-        const data = (await response.json()) as {
-          success: boolean;
-          events: Event[];
-        };
+        const data = await response.json();
 
         if (data.success) {
           setEvents(data.events);
@@ -74,43 +75,36 @@ export default function Component() {
 
     if (session?.user?.token) {
       fetchEvents();
-    } else {
-      timeoutId = setTimeout(() => {
-        fetchEvents();
-      }, 1000);
     }
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
   }, [token, session]);
 
-  const handleDelete = async (id: string) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete this event? ${id}`
-    );
-    if (!confirmed) return;
+  const handleDelete = async () => {
+    if (!eventIdToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/v1/event/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/v1/event/${eventIdToDelete}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user?.token}`,
+          },
+        }
+      );
 
-      const data = (await response.json()) as {
-        success: boolean;
-        message: string;
-      };
+      const data = await response.json();
 
       if (data.success) {
-        setEvents(events.filter((event) => event._id !== id)); // Update state to remove deleted event
+        setEvents(events.filter((event) => event._id !== eventIdToDelete));
       } else {
         console.error("Failed to delete event:", data.message);
       }
     } catch (error) {
       console.error("Error deleting event:", error);
+    } finally {
+      onOpenChange();
+      setEventIdToDelete(null);
     }
   };
 
@@ -135,6 +129,35 @@ export default function Component() {
           </section>
         ) : (
           <section className="mx-auto max-w-[1920px] px-4 py-12 text-skin-base">
+            <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+              <ModalContent>
+                {(onClose) => (
+                  <>
+                    <ModalHeader className="flex flex-col gap-1">
+                      Deleting Event...
+                    </ModalHeader>
+                    <ModalBody>
+                      <p>Are you sure you want to delete this event?</p>
+                    </ModalBody>
+                    <ModalFooter>
+                      <Button
+                        color="danger"
+                        variant="light"
+                        onPress={() => {
+                          onClose();
+                          setEventIdToDelete(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button color="primary" onPress={handleDelete}>
+                        Confirm
+                      </Button>
+                    </ModalFooter>
+                  </>
+                )}
+              </ModalContent>
+            </Modal>
             <div className="mb-4 grid grid-cols-12 gap-4">
               {events.map((event) => (
                 <Card
@@ -176,7 +199,10 @@ export default function Component() {
                         </DropdownItem>
 
                         <DropdownItem
-                          onClick={() => handleDelete(event._id)}
+                          onPress={() => {
+                            onOpen();
+                            setEventIdToDelete(event._id);
+                          }}
                           className="text-danger"
                           color="danger"
                           description="Permanently delete your event"
