@@ -25,8 +25,9 @@ import Loader from "../components/loader";
 import NavBar from "../components/navbar";
 import { useSession } from "next-auth/react";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { useRouter } from "next/navigation";
 
-export default function Component() {
+export default function EventsPage() {
   const { data: session } = useSession();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +36,7 @@ export default function Component() {
   const [token, setToken] = useState<string | undefined>(undefined);
   const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null);
 
-  const iconClasses =
-    "text-xl text-default-500 pointer-events-none flex-shrink-0";
+  const router = useRouter();
 
   useEffect(() => {
     if (session?.user?.token) {
@@ -160,92 +160,99 @@ export default function Component() {
             </Modal>
             <div className="mb-4 grid grid-cols-12 gap-4">
               {events.map((event) => (
-                <Card
-                  isFooterBlurred
+                <div
                   key={event._id}
-                  className="w-full h-[300px] col-span-4"
+                  className="col-span-4 cursor-pointer"
+                  onClick={() => router.push(`/events/${event._id}`)}
                 >
-                  <CardHeader className="absolute z-10 top-1 flex justify-between items-center">
-                    <div className="flex flex-col items-start">
-                      <h4 className="text-white/90 font-bold text-xl">
-                        {event.name}
-                      </h4>
-                      <p className="text-xs text-white/60 uppercase font-bold">
-                        {event.description}
-                      </p>
-                    </div>
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button
-                          size="sm"
-                          color="primary"
-                          radius="full"
-                          className="font-bold rounded-full bg-gray-500/20 backdrop-blur"
-                        >
-                          <BsThreeDotsVertical className="text-skin-base" />
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu variant="faded">
-                        <DropdownItem
-                          href={`/events/edit/${event._id}`}
-                          showDivider
-                          startContent={
-                            <PiPencil
-                              className={cn(iconClasses, "text-primary")}
-                            />
-                          }
-                        >
-                          Edit
-                        </DropdownItem>
-
-                        <DropdownItem
-                          onPress={() => {
-                            onOpen();
-                            setEventIdToDelete(event._id);
-                          }}
-                          className="text-danger"
-                          color="danger"
-                          description="Permanently delete your event"
-                          startContent={
-                            <BiTrash
-                              className={cn(iconClasses, "text-danger")}
-                            />
-                          }
-                        >
-                          Delete
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </CardHeader>
-                  <Image
-                    removeWrapper
-                    alt="Event Image"
-                    className="z-0 w-full h-full object-cover"
-                    src={
-                      event.images[0]?.url ||
-                      "https://nextui.org/images/card-example-1.jpeg"
-                    }
-                  />
-                  <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100">
-                    <div className="flex flex-grow gap-2 items-center">
-                      <div className="flex flex-col">
-                        <p className="text-tiny text-white/60">Organized by</p>
-                        <p className="font-bold text-tiny text-skin-inverted uppercase">
-                          {event.organizer.name.toUpperCase()}
+                  <Card
+                    isFooterBlurred
+                    key={event._id}
+                    className="w-full h-[300px] col-span-4 hover:border-2 hover:border-[#fd9e02] transition-colors"
+                  >
+                    <CardHeader className="absolute z-10 top-1 flex justify-between items-center">
+                      <div className="flex flex-col items-start rounded-xl bg-black/40 p-1 backdrop-blur">
+                        <h4 className="text-white/90 font-bold text-xl uppercase mx-2">
+                          {event.name}
+                        </h4>
+                        <p className="text-xs text-white/60 uppercase font-bold mx-2">
+                          {event.description}
                         </p>
                       </div>
-                    </div>
-                    <Button
-                      as={Link}
-                      href="/events/1"
-                      radius="full"
-                      size="sm"
-                      className="font-bold rounded-full bg-gray-500/20 backdrop-blur"
-                    >
-                      See Details
-                    </Button>
-                  </CardFooter>
-                </Card>
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <Button
+                            size="sm"
+                            color="primary"
+                            radius="full"
+                            className="font-bold rounded-full bg-black/40 backdrop-blur"
+                          >
+                            <BsThreeDotsVertical className="text-skin-base" />
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu variant="faded">
+                          <DropdownItem
+                            href={`/events/edit/${event._id}`}
+                            showDivider
+                            startContent={
+                              <PiPencil
+                                className={cn(
+                                  "text-xl text-default-500 pointer-events-none flex-shrink-0",
+                                  "text-primary"
+                                )}
+                              />
+                            }
+                          >
+                            Edit
+                          </DropdownItem>
+
+                          <DropdownItem
+                            onPress={() => {
+                              onOpen();
+                              setEventIdToDelete(event._id);
+                            }}
+                            className="text-danger"
+                            color="danger"
+                            description="Permanently delete your event"
+                            startContent={
+                              <BiTrash
+                                className={cn(
+                                  "text-xl text-default-500 pointer-events-none flex-shrink-0",
+                                  "text-danger"
+                                )}
+                              />
+                            }
+                          >
+                            Delete
+                          </DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                    </CardHeader>
+                    <Image
+                      removeWrapper
+                      alt="Event Image"
+                      className="z-0 w-full h-full object-cover"
+                      src={
+                        event.images[0]?.url ||
+                        "https://nextui.org/images/card-example-1.jpeg"
+                      }
+                      draggable={false}
+                      onContextMenu={(e) => e.preventDefault()}
+                    />
+                    <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100">
+                      <div className="flex flex-grow gap-2 items-center">
+                        <div className="flex flex-col">
+                          <p className="text-tiny text-white/60">
+                            Organized by
+                          </p>
+                          <p className="font-bold text-tiny text-skin-inverted uppercase">
+                            {event.organizer.name.toUpperCase()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </div>
               ))}
             </div>
           </section>

@@ -31,7 +31,7 @@ const TiltCard = () => {
 
   const transform = useMotionTemplate`rotateX(${xSpring}deg) rotateY(${ySpring}deg)`;
 
-  const handleMouseMove = (e: { clientX: number; clientY: number; }) => {
+  const handleMouseMove = (e: { clientX: number; clientY: number }) => {
     if (!ref.current) return [0, 0];
 
     const rect = (ref.current as Element).getBoundingClientRect();
@@ -72,7 +72,15 @@ const TiltCard = () => {
         }}
         className="absolute inset-4 grid place-content-center rounded-xl"
       >
-        <Image width={500} height={500} src={img} alt="BLEvently" priority />
+        <Image
+          width={500}
+          height={500}
+          src={img}
+          alt="BLEvently"
+          priority
+          draggable={false}
+          onContextMenu={(e) => e.preventDefault()}
+        />
       </div>
     </motion.div>
   );

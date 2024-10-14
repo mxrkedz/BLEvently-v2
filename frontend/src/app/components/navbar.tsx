@@ -105,7 +105,8 @@ export default function NavBar() {
                     <User
                       as="button"
                       avatarProps={{
-                        isBordered: true,
+                        draggable: false,
+                        onContextMenu: (e) => e.preventDefault(),
                         src: session?.user?.image ?? undefined,
                       }}
                       description={session?.user?.email ?? "Unknown User"}
@@ -113,7 +114,7 @@ export default function NavBar() {
                     />
                   </DropdownTrigger>
                   <DropdownMenu aria-label="Static Actions">
-                    <DropdownItem key="profile">Profile</DropdownItem>
+                    {/* <DropdownItem key="profile" href="/profile">Profile</DropdownItem> */}
                     <DropdownItem
                       key="logout"
                       className="text-danger"

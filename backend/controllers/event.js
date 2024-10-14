@@ -97,6 +97,7 @@ export const updateEvent = asyncError(async (req, res, next) => {
   } = req.body;
 
   const event = await Event.findById(req.params.id);
+
   if (!event) return next(new ErrorHandler("Event not found", 404));
 
   if (
@@ -118,11 +119,32 @@ export const updateEvent = asyncError(async (req, res, next) => {
   if (capacity) event.capacity = capacity;
   if (maxCapacity) event.maxCapacity = maxCapacity;
 
+  // Handle image update
+  if (req.file) {
+    // Delete old image from Cloudinary
+    if (event.images.length > 0) {
+      await cloudinary.v2.uploader.destroy(event.images[0].public_id);
+    }
+
+    // Upload new image to Cloudinary
+    const file = getDataUri(req.file);
+    const myCloud = await cloudinary.v2.uploader.upload(file.content, {
+      folder: "events",
+    });
+    const newImage = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    };
+
+    // Update images array
+    event.images = [newImage];
+  }
+
   await event.save();
 
   res.status(200).json({
     success: true,
-    message: "Event Updated Succesfully",
+    message: "Event Updated Successfully",
   });
 });
 

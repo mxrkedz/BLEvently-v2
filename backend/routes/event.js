@@ -18,7 +18,7 @@ router.get("/myevents", isAuthenticated, getMyEvents);
 router
   .route("/:id")
   .get(getEventDetails)
-  .put(isAuthenticated, updateEvent)
+  .put(isAuthenticated, singleUpload, updateEvent)
   .delete(isAuthenticated, deleteEvent);
 
 export default router;

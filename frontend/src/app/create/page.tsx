@@ -27,8 +27,8 @@ const CreatePage = () => {
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files?.length ? e.target.files : []);
-    setImagesPreview([]); // Reset previews
-    setImages([]); // Reset image files
+    setImagesPreview([]);
+    setImages([]);
 
     files.forEach((file) => {
       const reader = new FileReader();
@@ -48,7 +48,9 @@ const CreatePage = () => {
 
     const formData = new FormData();
     formData.append("name", name);
+    // @ts-ignore
     formData.append("startDate", startDate);
+    // @ts-ignore
     formData.append("endDate", endDate);
     formData.append("location", location);
     formData.append("description", description);
@@ -149,7 +151,8 @@ const CreatePage = () => {
                 isRequired
                 errorMessage="Please enter a valid date."
                 minValue={now(getLocalTimeZone())}
-                onChange={(value) => setStartDate(value.toString())} // Update start date
+                // @ts-ignore
+                onChange={(value) => setStartDate(value.toString())}
               />
             </div>
             <div className="space-y-2 mt-5">
@@ -162,7 +165,8 @@ const CreatePage = () => {
                 isRequired
                 errorMessage="Please enter a valid date."
                 minValue={now(getLocalTimeZone())}
-                onChange={(value) => setEndDate(value.toString())} // Update end date
+                // @ts-ignore
+                onChange={(value) => setEndDate(value.toString())}
               />
             </div>
           </div>
@@ -207,7 +211,7 @@ const CreatePage = () => {
                   value="Free"
                   id="Free"
                   checked={ticketType === "Free"}
-                  onChange={(e) => setTicketType(e.target.value)} // Update ticket type
+                  onChange={(e) => setTicketType(e.target.value)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                 />
                 <label htmlFor="Free" className="font-bold mt-1">
@@ -221,7 +225,7 @@ const CreatePage = () => {
                   value="Paid"
                   id="Paid"
                   checked={ticketType === "Paid"}
-                  onChange={(e) => setTicketType(e.target.value)} // Update ticket type
+                  onChange={(e) => setTicketType(e.target.value)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                 />
                 <label htmlFor="Paid" className="font-bold mt-1">
@@ -242,7 +246,7 @@ const CreatePage = () => {
                 variant="bordered"
                 placeholder="0.00"
                 labelPlacement="outside"
-                onChange={(e) => setPrice(Number(e.target.value))} // Update price
+                onChange={(e) => setPrice(Number(e.target.value))}
                 startContent={
                   <div className="pointer-events-none flex items-center">
                     <span className="text-default-400 text-small">$SOL</span>
@@ -301,7 +305,7 @@ const CreatePage = () => {
                 isRequired
                 placeholder="0"
                 labelPlacement="outside"
-                onChange={(e) => setMaxCapacity(Number(e.target.value))} // Update max capacity
+                onChange={(e) => setMaxCapacity(Number(e.target.value))}
                 startContent={
                   <div className="pointer-events-none flex items-center">
                     <span className="text-default-400 text-small">
